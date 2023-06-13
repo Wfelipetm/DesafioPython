@@ -1,84 +1,71 @@
-MEGABYTE = 1024 * 1024
 usuarios = {}
 
-
-def LeTextoDoArquivo(nomeDoArquivo):
-    input_file = open(nomeDoArquivo, 'r')
-    texto = input_file.read()
-    input_file.close()
-    return texto
+MEGABYTE = 1024 * 1024
 
 
-def EscreveTextoNoArquivo(texto, nomeDoArquivo):
-    output_file = open(nomeDoArquivo, 'w')
-    output_file.write(texto)
-    output_file.close()
+def preenche_informacoes_usuarios():
+    quantidade_usuarios = int(input("Quantidade de usuários: "))
+
+    for i in range(1, quantidade_usuarios + 1):
+        nome_usuario = input("Digite o nome do usuário " + str(i) + ": ")
+        espaco_utilizado = int(input("Digite o espaço utilizado em MB pelo usuário " + str(i) + ": "))
+
+        usuarios[nome_usuario] = espaco_utilizado * MEGABYTE
 
 
-def PreencheInformacoesUsuarios(texto):
-    linhas = texto.split('\n')
-    for linha in linhas:
-        linhaEmLista = linha.split()
-        nomeUsuario = linhaEmLista[0]
-        espacoUtilizado = int(linhaEmLista[1])
-        usuarios[nomeUsuario] = espacoUtilizado
+def converte_bytes_para_megabytes(espaco_em_bytes):
+    return espaco_em_bytes / MEGABYTE
 
 
-def CalculaEspacoTotal():
-    espacosUtilizados = [espacoDoUsuario for _, espacoDoUsuario in usuarios.items()]
-    espacoTotal = sum(espacosUtilizados)
-    return espacoTotal
+def cria_relatorio():
+    quantidade_usuarios = len(usuarios)
+    espaco_total = calcula_espaco_total()
 
-
-def ConverteBytesParaMegabytes(espacoEmBytes):
-    return espacoEmBytes / MEGABYTE
-
-
-def CriaRelatorio():
-    quantidadeUsuarios = len(usuarios)
-    espacoTotal = CalculaEspacoTotal()
-
-    relatorio = 'ACME Inc.    Uso do espaço em disco pelos usuários\n'
-    relatorio += '----------------------------------------------------\n'
-    relatorio += 'Nr.  Usuário        Espaço utilizado     % do uso\n'
+    relatorio = "ACME Inc.    Uso do espaço em disco pelos usuários\n"
+    relatorio += "----------------------------------------------------\n"
+    relatorio += "Nr.  Usuário        Espaço utilizado     % do uso\n"
 
     numero = 1
-    for nomeUsuario, espacoDoUsuario in usuarios.items():
-        espacoEmMB = ConverteBytesParaMegabytes(espacoDoUsuario)
-        porcentagem = (espacoDoUsuario / espacoTotal) * 100
+    for nome_usuario, espaco_do_usuario in usuarios.items():
+        espaco_em_mb = converte_bytes_para_megabytes(espaco_do_usuario)
+        porcentagem = espaco_do_usuario * 100 / espaco_total
 
-        textoNumero = str(numero).ljust(5)
-        textoNome = nomeUsuario.ljust(14)
-        textoEspaco = "{:.2f}".format(espacoEmMB).rjust(7) + " MB"
-        textoEspaco += " ".ljust(11)
-        textoPorc = "{:.2f}".format(porcentagem).rjust(6) + "%"
+        texto_numero = str(numero).strip()
+        texto_nome = nome_usuario.strip()
+        texto_espaco = "{:.2f}".format(espaco_em_mb) + " MB"
+        texto_porc = "{:.2f}".format(porcentagem) + "%"
 
-        linha = "{num}{usuario}{espaco}{porc}\n".format(
-            num=textoNumero, usuario=textoNome, espaco=textoEspaco, porc=textoPorc
-        )
+        linha = "{:<5s}{:<15s}{:<20s}{}\n".format(texto_numero, texto_nome, texto_espaco, texto_porc)
         relatorio += linha
         numero += 1
 
-    espacoTotalEmMB = ConverteBytesParaMegabytes(espacoTotal)
-    relatorio += "\nEspaco total ocupado: {:.2f} MB".format(espacoTotalEmMB)
-    relatorio += "\nEspaco médio ocupado: {:.2f} MB".format(
-        espacoTotalEmMB / quantidadeUsuarios
-    )
+    espaco_total_em_mb = converte_bytes_para_megabytes(espaco_total)
+    relatorio += "\nEspaco total ocupado: {:.2f}".format(espaco_total_em_mb) + " MB\n"
+    relatorio += "Espaco médio ocupado: {:.2f}".format(espaco_total_em_mb / quantidade_usuarios) + " MB\n"
+
     return relatorio
 
 
-def main():
-    quantidadeUsuarios = int(input("Quantidade de usuários: "))
-
-    for i in range(quantidadeUsuarios):
-        nomeUsuario = input("Digite o nome do usuário: ")
-        espacoUtilizado = float(input("Digite o espaço utilizado em MB: "))
-        usuarios[nomeUsuario] = espacoUtilizado * MEGABYTE
-
-    relatorio = CriaRelatorio()
-   
-
-    EscreveTextoNoArquivo(relatorio, 'relatorio.txt')
+def calcula_espaco_total():
+    espaco_total = 0
+    for espaco_do_usuario in usuarios.values():
+        espaco_total += espaco_do_usuario
+    return espaco_total
 
 
-main()
+def escreve_texto_no_arquivo(texto, nome_arquivo):
+    try:
+        with open(nome_arquivo, 'w') as arquivo:
+            arquivo.write(texto)
+        print("Relatório salvo no arquivo " + nome_arquivo)
+    except IOError:
+        print("Ocorreu um erro ao salvar o relatório no arquivo:")
+
+
+preenche_informacoes_usuarios()
+relatorio = cria_relatorio()
+
+print(relatorio)  # Exibir relatório no terminal
+
+nome_arquivo = input("Digite o nome do arquivo para salvar o relatório: ")
+escreve_texto_no_arquivo(relatorio, nome_arquivo)
